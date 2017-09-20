@@ -18,7 +18,7 @@ const session = require('express-session');
 // requirements for openid-client, as well as reading in the key we generated
 const fs = require('fs'); // used to read in the key file
 const jose = require('node-jose'); // used to parse the keystore
-const Issue = require('openid-client').Issuer; 
+const Issuer = require('openid-client').Issuer; 
 const Strategy = require('openid-client').Strategy;
 
 // filename for the keys
@@ -79,7 +79,7 @@ let discover_issuer = Issuer.discover(oidc_discover_url);
 // Create a client, and use it set up a Strategy for passport to use
 // since we need both the Issuer and the keystore, we'll use Promise.all()
 Promise.all([load_keystore, discover_issuer])
-	.then([ks, myIssuer] => {
+	.then(([ks, myIssuer]) => {
 		console.log("Found Issuer: ", myIssuer);
 		const oidc_client = new myIssuer.Client(client_params, ks);
 		console.log("Created client: ", oidc_client);
