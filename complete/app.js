@@ -68,6 +68,9 @@ app.use(passport.session());
 passport.serializeUser((user, done) => { done(null, user);});
 passport.deserializeUser((user, done) => { done( null, user);});
 
+// demo authentication routes
+const authroutes = require('./routes/authenticated_routes')(app,passport);
+
 // load keystore and set up openid-client
 const jwk_json = JSON.parse(fs.readFileSync(jwk_file, "utf-8"));
 // load the keystore. returns a Promise

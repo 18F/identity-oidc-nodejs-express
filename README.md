@@ -164,10 +164,79 @@ Promise.all([load_keystore, discover_issuer])
 
 Now all that is left is to set up the callback URL and add authentication requirements to protected URLs.
 
+### Setting up a protected page
 
+We'll place all our authentication related routes in a single place `routes/authenticated_routes.js`. This file exports  a single function that adds routes to the app, along with the required `passport.autenticate(...)` calls. There is a second function in the file `isLoggedIn(req, res, next)` which is a helper function for locking down a new route. (In this case the `/profile` route).
 
+```
+module.exports = function(app, passport) {
+    app.get('/login', passport.authenticate('oidc'));
 
+    // OIDC Callback
+    app.get('/openid-connect-login', passport.authenticate('oidc', {successRedirect:'/profile', failureRedirect:'/'}));
+
+    app.get('/profile', isLoggedIn, function(req, res){
+        console.log("In profile");
+        res.render('profile', {title: 'Express - profile', user: req.user.name});
+    });
+
+    app.get('/logout', function(req, res) {
+        req.logout();
+        res.redirect('/');
+    });
+};
+
+function isLoggedIn(req, res, next) {
+    if (req.isAuthenticated()) {
+        console.log("Is authenticated");
+        return next();
+    }
+    console.log("Not Authenticated");
+    res.redirect('/');
+}
+```
+Next we have to add this to the app.js file with the line:
+```
+// demo authentication routes
+const authroutes = require('./routes/authenticated_routes')(app,passport);
+```
+
+The only restriction on that line is it has to be after `app.use(passport.initialize());` is called, but it can be before we set up the Strategy.
+
+Since we're adding a `/profile` page, we'll need a view. To keep things simple, we'll just pass in the name from the user object and put it in the text.
+
+Add `views/profile.pug`:
+```
+extends layout
+
+block content
+  h1= title
+  p Welcome, #{user}
+
+  a(href="/logout") Logout
+```
+**NOTE** Logging out will only log you out of the Express app. If you are still logged into the OpenID Connect Provider, you'll just get automatically logged back in by clicking `/login`.
+
+While we're at it, we'll add in a '/login' link to the index page. If we're sucessful on login, we'll get forwarded to the `/profile`.
+
+Change `views/index.pug` to:
+```
+extends layout
+
+block content
+  h1= title
+  p Welcome to #{title}
+
+  a(href='/login') Login Here
+```
+
+Now start it up and hit [http://localhost:3000/](http://localhost:3000) with:
+```
+ DEBUG=myapp:* npm start
+```
 
 ## Summary
+ - We set up an express app using the express generator (found in `initial_app/`)
+ - We added the ability to generate secure keys for authenticating with an OpenID Connect provider using `node-jose`. (found in `generate_keys/`)
+ - Lastly we integrated OpenID Connect with our express application using `openid-client` (found in `complete/`)
 
-## See Also
