@@ -32,7 +32,38 @@ Install the `node-jose` library while in your `myapp` directory with:
 myapp$ npm install node-jose --save
 ```
 
-Next you'll want to add the `generate_keys` file and execute it to generate a public key in `pub_key.jwk` and the private key in `full_key.jwk`. Use the contents of the `pub_key.jwk` file when you register your client.
+Next you'll want to add the `generate_keys` file in `myapp/bin` and execute it to generate a public key in `pub_key.jwk` and the private key in `full_key.jwk`. Use the contents of the `pub_key.jwk` file when you register your client.
+
+```
+#!/usr/bin/env node
+const jose = require('node-jose');
+const fs = require('fs');
+
+// Set the properties used in generating the keys
+const props = {
+	"kty": "RSA",
+	"e": "AQAB",
+	"kid": "my_rsa_key", // set this to whatever you'd like your key id to be
+	"alg": "RS256"
+};
+
+const pub_key_file = '../pub_key.jwk';
+const full_key_file = '../full_key.jwk';
+
+// Create a keystore
+keystore = jose.JWK.createKeyStore();
+
+// Generate the key using 2048 bits
+keystore.generate("RSA", 2048, props)
+	.then(result => {
+		key = result;
+		// write out the public key
+		fs.writeFileSync(pub_key_file, JSON.stringify({keys: [key.toJSON()]}));
+		// write out the public/private key (DO NOT SHARE!)
+		fs.writeFileSync(full_key_file, JSON.stringify({keys: [key.toJSON(true)]}));
+	})
+.catch(err => {console.log(err);})
+```
 
 ## Set up Passport and `openid-client`
 [Passport](http://passportjs.org/) makes it easy to add authentication to an Express application with a variaty of backends. Since we'll also want to make sure we're not re-logging in a user on every page hit, we'll want to add server side sessions with `express-session`.
