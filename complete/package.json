@@ -13,6 +13,7 @@
     "express-session": "^1.15.5",
     "morgan": "~1.8.1",
     "node-jose": "^0.9.5",
+    "openid-client": "^1.15.0",
     "passport": "^0.4.0",
     "pug": "~2.0.0-beta11",
     "serve-favicon": "~2.4.2"
