@@ -16,7 +16,7 @@ Install the generator globally
 
 Next we'll generate our application using the [Pug template engine](https://github.com/pugjs/pug) (Which was formally called `Jade`). We'll change into the resulting directory and run `npm install` to finish setting up the dependencies.
 
-```
+```sh
  $ express --view=pug myapp
  $ cd myapp
  myapp$ npm install
@@ -28,13 +28,14 @@ At this point executing `DEBUG=myapp:* npm start` will start the server and you 
 If you are going to be using signed keys rather than a `client-secret` for authenticating your client to the OpenID Connect server, you'll need to gerenrate them. We'll be using the `node-jose` library to do this. **NOTE:** in order for the `node-jose` library to use `RSA256` keys, it requires all the optional parameters for the private key, and not just the required `d` parameter. To accomidate this, we'll use the `node-jose` library to generate our keys.
 
 Install the `node-jose` library while in your `myapp` directory with:
-```
+
+```sh
 myapp$ npm install node-jose --save
 ```
 
 Next you'll want to add the `generate_keys` file in `myapp/bin` and execute it to generate a public key in `pub_key.jwk` and the private key in `full_key.jwk`. Use the contents of the `pub_key.jwk` file when you register your client.
 
-```
+```js
 #!/usr/bin/env node
 const jose = require('node-jose');
 const fs = require('fs');
@@ -68,7 +69,7 @@ keystore.generate("RSA", 2048, props)
 ## Set up Passport and `openid-client`
 [Passport](http://passportjs.org/) makes it easy to add authentication to an Express application with a variaty of backends. Since we'll also want to make sure we're not re-logging in a user on every page hit, we'll want to add server side sessions with `express-session`.
 
-```
+```sh
 myapp $ npm install express-session --save
 myapp $ npm install passport --save
 ```
@@ -76,7 +77,7 @@ Next we'll set these up by modifying `app.js`.
 
 Near the top, add in the require statements. 
 
-```
+```js
 ...
 var app = express();
 
@@ -93,7 +94,7 @@ A bit further down in `app.js` we'll initialize things. First the session manage
 
 Lastly we'll tell passport how to serialize/deserialize users to the session, with a very simple function. (I imagine for more complicated applications these might be expanded.)
 
-```
+```js
 ...
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
@@ -121,14 +122,15 @@ app.use('/users', users);
 ### Set up `openid-client`
 Now we need to setup the openid-client which is how we'll connect to the openid-connect provider using the keys we generated earlier.
 
-First we'll install it
-```
+First we'll install it.
+
+```sh
 myapp$ npm install openid-client --save
 ```
 
 Next we'll add it to `app.js` and set up a `Strategy` for `passport` to use. Add the following after the passport `require()` statements you added before
 
-```
+```js
 // requirements for openid-client, as well as reading in the key we generated
 const fs = require('fs'); // used to read in the key file
 const jose = require('node-jose'); // used to parse the keystore
@@ -155,8 +157,9 @@ const strat_params = {
 };
 ```
 
-Next we'll actually set up the OIDC Strategy. Add the following after the passport serialization code we added above
-```
+Next we'll actually set up the OIDC Strategy. Add the following after the passport serialization code we added above.
+
+```js
 // load keystore and set up openid-client
 const jwk_json = JSON.parse(fs.readFileSync(jwk_file, "utf-8"));
 // load the keystore. returns a Promise
@@ -199,7 +202,7 @@ Now all that is left is to set up the callback URL and add authentication requir
 
 We'll place all our authentication related routes in a single place `routes/authenticated_routes.js`. This file exports  a single function that adds routes to the app, along with the required `passport.autenticate(...)` calls. There is a second function in the file `isLoggedIn(req, res, next)` which is a helper function for locking down a new route. (In this case the `/profile` route).
 
-```
+```js
 module.exports = function(app, passport) {
     app.get('/login', passport.authenticate('oidc'));
 
@@ -227,7 +230,8 @@ function isLoggedIn(req, res, next) {
 }
 ```
 Next we have to add this to the app.js file with the line:
-```
+
+```js
 // demo authentication routes
 const authroutes = require('./routes/authenticated_routes')(app,passport);
 ```
@@ -237,6 +241,7 @@ The only restriction on that line is it has to be after `app.use(passport.initia
 Since we're adding a `/profile` page, we'll need a view. To keep things simple, we'll just pass in the name from the user object and put it in the text.
 
 Add `views/profile.pug`:
+
 ```
 extends layout
 
@@ -251,6 +256,7 @@ block content
 While we're at it, we'll add in a '/login' link to the index page. If we're sucessful on login, we'll get forwarded to the `/profile`.
 
 Change `views/index.pug` to:
+
 ```
 extends layout
 
@@ -262,7 +268,8 @@ block content
 ```
 
 Now start it up and hit [http://localhost:3000/](http://localhost:3000) with:
-```
+
+```sh
  DEBUG=myapp:* npm start
 ```
 
