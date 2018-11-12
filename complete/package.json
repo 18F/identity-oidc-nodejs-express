@@ -11,7 +11,7 @@
     "debug": "~2.6.3",
     "express": "~4.15.2",
     "express-session": "^1.15.5",
-    "morgan": "~1.8.1",
+    "morgan": "~1.9.1",
     "node-jose": "^0.9.5",
     "openid-client": "^1.15.0",
     "passport": "^0.4.0",
